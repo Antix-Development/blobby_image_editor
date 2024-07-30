@@ -141,12 +141,20 @@
         filter: brightness(0.6);
       }
 
+      hr {
+        margin: 1rem 0;
+        width: 100%;
+        border: 1px solid #fff4;
+      }
+
       h1 {
         font-size: 3.4rem;
+        line-height: 4.2rem;
         color: var(--heading-color);
       }
 
       h2 {
+        line-height: 3.4rem;
         color: var(--sub-heading-color);
       }
 
@@ -284,7 +292,7 @@
         overflow: scroll;
       }
 
-      .length, .string, .func, .number, .curly-brace, .bracket, .comment, .parenthesis, .semicolon, .keyword, .arrow-function { font-family: 'Courier New', Courier, monospace; }
+      .length, .string, .func, .number, .curly-brace, .bracket, .comment, .parenthesis, .semicolon, .keyword, .arrow-function, literal { font-family: 'Courier New', Courier, monospace; }
       .length { color: #afa; }
       .string { color: #5e4; }
       .func { color: #ff0; }
@@ -296,6 +304,7 @@
       .semicolon { color: #eee; }
       .keyword { color: #ff8; }
       .arrow-function { color: #ff8; }
+      .literal { color: #e7d; }
 
       .emphasize {
         font-weight: 650;
@@ -375,18 +384,31 @@
         display: none;
       }
 
-      #helpBody {
-        padding: 1rem 1rem;
-        margin: 1rem 0;
-        border-radius: 3px;
+      #helpContainer {
         position: absolute;
         left:20%;
         top: 4rem;
         width: 60%;
+        height: calc(100% - 8rem);
+        padding: 1rem;
+        background-color: var(--background-color);
+        box-shadow: 3px 3px 8px #000;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+
+      #helpBody {
+        padding: 1rem 1rem;
+        margin: 1rem 0;
+        border-radius: 3px;
         background-color: var(--background-color);
         line-height: 2.8rem;
-        max-height: 80rem;
         overflow-y: scroll;
+        height: calc(100% - 2rem);
+      }
+
+      #closeHelpButton {
+        width: 100%;
       }
 
       #messageBox {
@@ -700,189 +722,223 @@
     </div>
 
     <div id="help">
-      <div id="helpBody">
-        <h1>Blobby Image Editor</h1><br>
+      <div id="helpContainer">
+        <div id="helpBody">
 
-        Welcome to the Blobby Image Editor, where you can create and edit blobby images (groups of polygons).<br>
-        <br>
+          <h1>Blobby Image Editor</h1>
+          <hr>
 
-        <h2>Getting Started</h2>
-        <ol>
-          <li>Click the <b><i>New Image</i></b> button to create a new blobby image.<br></li>
-          <li>Click the <b><i>New Component</i></b> button to add a new component to the selected blobby image.<br></li>
-          <li>Click anywhere in the editor pane to add points to the selected component.<br></li>
-          <li>Create and manipulate more components and blobby images.<br></li>
-          <li>Export and use the blobby images inside your game.<br></li>
-        </ol>
-        <br>
+          A basic tool for creating and editing 2d blobby images which can be used as assets in web apps and games.
+          
+          <br>
+          <br>
 
-        <h2>Selecting Things</h2>
-        <ul>
-          <li><b><i>Left</i></b> click a point in the editor pane to select it.<br></li>
-          <li><b><i>Right</i></b> click a component in the editor pane to select it.<br></li>
-          <li>Press the <b><i>Tilde</i></b> key to select the next point in the selected component.</li>
-          <li>Hold the <b><i>Shift</i></b> key and press the <b><i>Tilde</i></b> key to select the previous point in the selected component.</li>
-          <li>Hold the <b><i>Alt</i></b> key and press the <b><i>Tilde</i></b> key to cycle through the components in the selected blobby image.</li>
-          <li>Hold the <b><i>Ctrl</i></b> key and press the <b><i>Tilde</i></b> key to cycle through the blobby images.</li>
-        </ul>
-        <br>
+          <h2>What's New</h2>
+          <hr>
+          <ul>
+            <li>Component points now encoded to ASCII string to reduce exported code size. Thanks to <a href="https://github.com/xem" target="_blank">xem</a> for suggesting.</li>
+            <li>Image dimensions also encoded into an ASCII string.</li>
+            <li>Viewer now generates SVG image. Thanks again to <a href="https://github.com/xem" target="_blank">xem</a> for suggesting it.</li>
+            <li>Viewer code grew in size but offset by size savings in exported code.</li>
+            <li>Help dialog improved layout and also now mirrors readme.md.</li>
+            <li>Major overhaul of the syntax highlighting so it can handle literal template strings.</li>
+          </ul>
+          <br>
+          <br>
 
-        <h2>Moving Things</h2>
-        <ul>
-          <li><b><i>Left</i></b> click and hold points from the selected component in the editor pane, and drag them about.</li>
-          <li>Use <b><i>Arrow</i></b> keys to move the selected point.</li>
-          <li>Hold <b><i>Shift</i></b> and press <b><i>Arrow</i></b> keys to move the selected component.</li>
-          <li>Hold <b><i>Ctrl</i></b> and press <b><i>Arrow</i></b> keys to move the selected blobby image.</li>
-        </ul>
-        <br>
+          <h2>History</h2>
+          <hr>
 
-        <h2>Deleting Things</h2>
-        <ul>
-          <li>Press the <b><i>Delete</i></b> key to delete the selected point.</li>
-          <li>Hold <b><i>Shift</i></b> and press the <b><i>Delete</i></b> key to delete the selected component.</li>
-          <li>Hold <b><i>Ctrl</i></b> and press the <b><i>Delete</i></b> key to delete the selected blobby image.</li>
-        </ul>
-      <br>
-
-        <h2>Components</h2>
-        <ul>
-          <li>Use the <b><i>Blobbiness</i></b> slider to change the blobbiness of the selected component.</li>
-          <li>Use the <b><i>Z-Index</i></b> slider to change the selected components draw order.</li>
-          <li>You can <b><i>Double-Click</i></b> a palette to modify its colors.</li>
-          <li>The other controls in this pane should be self explanatory..</li>
-        </ul>
-
-        <br>
-
-        <h2>Uploading and Downloading Images</h2>
-        <ul>
-          <li>Click the <b><i>Download Images</i></b> button to open a dialog where you can select images to download.</li>
-          <li>Click the <b><i>Upload Images</i></b> button to upload previously downloaded images..</li>
-        </ul>
-        <br>
+          <details><summary>v0.9.0 (28 Jul 2024)</summary><p>
+            <br>
+          
+          - Initial public release
+          <br>
         
-        <h2>Exporting Images</h2>
-        <ul>
-          <li>Click the <b><i>Export Images</i></b> button to generate JavaScript code describing the images, and copy it to the clipboard.</li>
-          <li>Fiddle with the other controls to modify the format of the generated code.</li>
-          <li>You can also drag the names around in the blobby image list to change the order in which the are exported.</li>
-          <li><b><i>Note</i></b> Exported images will be clipped to their bounding boxes.</li>
-          <li><b><i>Note</i></b> Exported images will be scaled according to the selected scale in the preview panel.</li>
-        </ul>
-        <br>
+          </p></details>
+          <br>
+          
+          <h2>Getting Started</h2>
+          <hr>
+          <ol>
+            <li>Click the <b><i>New Image</i></b> button to create a new blobby image.<br></li>
+            <li>Click the <b><i>New Component</i></b> button to add a new component to the selected blobby image.<br></li>
+            <li>Click anywhere in the editor pane to add points to the selected component.<br></li>
+            <li>Create and manipulate more components and blobby images.<br></li>
+            <li>Export and use the blobby images inside your game.<br></li>
+          </ol>
+          <br>
+          
+          <h2>Selecting Things</h2>
+          <hr>
+          <ul>
+            <li><b><i>Left</i></b> click a point in the editor pane to select it.<br></li>
+            <li><b><i>Right</i></b> click a component in the editor pane to select it.<br></li>
+            <li>Press the <b><i>Tilde</i></b> key to select the next point in the selected component.</li>
+            <li>Hold the <b><i>Shift</i></b> key and press the <b><i>Tilde</i></b> key to select the previous point in the selected component.</li>
+          <li>Hold the <b><i>Alt</i></b> key and press the <b><i>Tilde</i></b> key to cycle through the components in the selected blobby image.</li>
+              <li>Hold the <b><i>Ctrl</i></b> key and press the <b><i>Tilde</i></b> key to cycle through the blobby images.</li>
+          </ul>
+          <br>
+          
+          <h2>Moving Things</h2>
+          <hr>
+          <ul>
+            <li><b><i>Left</i></b> click and hold points from the selected component in the editor pane, and drag them about.</li>
+            <li>Use <b><i>Arrow</i></b> keys to move the selected point.</li>
+            <li>Hold <b><i>Shift</i></b> and press <b><i>Arrow</i></b> keys to move the selected component.</li>
+            <li>Hold <b><i>Ctrl</i></b> and press <b><i>Arrow</i></b> keys to move the selected blobby image.</li>
+          </ul>
+          <br>
+          
+          <h2>Deleting Things</h2>
+          <hr>
+          <ul>
+            <li>Press the <b><i>Delete</i></b> key to delete the selected point.</li>
+            <li>Hold <b><i>Shift</i></b> and press the <b><i>Delete</i></b> key to delete the selected component.</li>
+            <li>Hold <b><i>Ctrl</i></b> and press the <b><i>Delete</i></b> key to delete the selected blobby image.</li>
+          </ul>
+          <br>
 
-        The exported data will be in the form of an array named <b><i>blobbyImages</i></b>, which contains the following data...<br>
-        <table>
-          <caption>blobbyImages</caption>
-          <tbody>
-            <tr class="emphasize">
-              <td>Index</td>
-              <td>Type</td>
-              <td>Description</td>
-            </tr>
-            <tr>
-              <td>0 to length - 3</td>
-              <td>array</td>
-              <td><b><i>ImageDefs</i></b>.</td>
-            </tr>
-            <tr>
-              <td>length - 2</td>
-              <td>number</td>
-              <td>Line width used when rendering.</td>
-            </tr>
-            <tr>
-              <td>length - 1</td>
-              <td>array</td>
-              <td>Palette strings, eight sets of 3 in total.</td>
-            </tr>
+          <h2>Components</h2>
+          <hr>
+          <ul>
+            <li>Use the <b><i>Blobbiness</i></b> slider to change the blobbiness of the selected component.</li>
+            <li>Use the <b><i>Z-Index</i></b> slider to change the selected components draw order.</li>
+            <li>You can <b><i>Double-Click</i></b> a palette to modify its colors.</li>
+            <li>The other controls in this pane should be self explanatory..</li>
+          </ul>
+          <br>
 
-          </tbody>
-        </table>
-        <br>
+          <h2>Uploading and Downloading Images</h2>
+          <hr>
+          <ul>
+            <li>Click the <b><i>Download Images</i></b> button to open a dialog where you can select images to download.</li>
+            <li>Click the <b><i>Upload Images</i></b> button to upload previously downloaded images..</li>
+          </ul>
+          <br>
 
-        <table>
-          <caption>ImageDef</caption>
-          <tbody>
-            <tr class="emphasize">
-              <td>Index</td>
-              <td>Type</td>
-              <td>Description</td>
-            </tr>
-            <tr>
-              <td>0 to length - 3</td>
-              <td>array</td>
-              <td><b><i>Components</i></b>, sorted into ascending z-index order.</td>
-            </tr>
-            <tr>
-              <td>length - 2</td>
-              <td>number</td>
-              <td>Image width.</td>
-            </tr>
-            <tr>
-              <td>length - 1</td>
-              <td>number</td>
-              <td>Image height.</td>
-            </tr>
-          </tbody>
-        </table>
-        <br>
+          <h2>Exporting Images</h2>
+          <hr>
+          <ul>
+            <li>Click the <b><i>Export Images</i></b> button to generate JavaScript code describing the images, and copy it to the clipboard.</li>
+            <li>Fiddle with the other controls to modify the format of the generated code.</li>
+            <li>You can also drag the names around in the blobby image list to change the order in which the are exported.</li>
+            <li><b><i>Note</i></b> Exported images will be clipped to their bounding boxes.</li>
+            <li><b><i>Note</i></b> Exported images will be scaled according to the selected scale in the preview panel.</li>
+          </ul>
+          <br>
 
-        <table>
-          <caption>Component</caption>
-          <tbody>
-            <tr class="emphasize">
-              <td>Index</td>
-              <td>Type</td>
-              <td>Description</td>
-            </tr>
-            <tr>
-              <td>0 to length - 6 </td>
-              <td>number</td>
-              <td><b><i>Points</i></b>, sorted into clockwise order.</td>
-            </tr>
-            <tr>
-              <td>length - 5</td>
-              <td>number</td>
-              <td>Gradient x.</td>
-            </tr>
-            <tr>
-              <td>length - 4</td>
-              <td>number</td>
-              <td>gradient y.</td>
-            </tr>
-            <tr>
-              <td>length - 3</td>
-              <td>number</td>
-              <td>Gradient radius.</td>
-            </tr>
-            <tr>
-              <td>length - 2</td>
-              <td>number</td>
-              <td>Blobbiness.</td>
-            </tr>
-            <tr>
-              <td>length - 1</td>
-              <td>number</td>
-              <td>Palette.</td>
-            </tr>
-          </tbody>
-        </table>
-        <br>
+          The exported data will be in the form of an array named <b><i>blobbyImages</i></b>, which contains the following data...
+          <br>
 
-        <h2>Miscellaneous</h2>
-        <ul>
-          <li>Everything that moves does so in 2 pixel increments to avoid floating point numbers.</li>
-          <li>All blobby images are stored in your web browsers `<i>localStorage</i>`.</li>
-          <li>Currently there is no <i>UNDO</i> functionality.</li>
-          <li>Seems to work in Chrome and FireFox, </li>
-        </ul>
-        <br>
+          <table>
+            <caption>blobbyImages</caption>
+            <tbody>
+              <tr class="emphasize">
+                <td>Index</td>
+                <td>Type</td>
+                <td>Description</td>
+              </tr>
+              <tr>
+                <td>0</td>
+                <td>array</td>
+                <td><b><i>ImageDefs</i></b>.</td>
+              </tr>
+              <tr>
+                <td>length - 2</td>
+                <td>number</td>
+                <td>Line width used when rendering.</td>
+              </tr>
+              <tr>
+                <td>length - 1</td>
+                <td>array</td>
+                <td>Palette strings, eight sets of 3 in total.</td>
+              </tr>
+          
+            </tbody>
+          </table>
+          <br>
 
-        Blobby image editor is a tool created for JS13K 2024 by Cliff Earl, Antix Development.<br>
-        <br>
-        <button style="width: 100%;" onclick="showHelp(false);">OKAY</button>
+          <table>
+            <caption>ImageDef</caption>
+            <tbody>
+              <tr class="emphasize">
+                <td>Index</td>
+                <td>Type</td>
+                <td>Description</td>
+              </tr>
+              <tr>
+                <td>0</td>
+                <td>array</td>
+                <td><b><i>Components</i></b>, sorted into ascending z-index order.</td>
+              </tr>
+              <tr>
+                <td>length - 1</td>
+                <td>encoded array</td>
+                <td>Image width and height.</td>
+              </tr>
+            </tbody>
+          </table>
+          <br>
+
+          <table>
+            <caption>Component</caption>
+            <tbody>
+              <tr class="emphasize">
+                <td>Index</td>
+                <td>Type</td>
+                <td>Description</td>
+              </tr>
+              <tr>
+                <td>0</td>
+                <td>encoded array</td>
+                <td><b><i>Points</i></b>, sorted into clockwise order.</td>
+              </tr>
+              <tr>
+                <td>length - 2</td>
+                <td>number</td>
+                <td>Blobbiness.</td>
+              </tr>
+              <tr>
+                <td>length - 1</td>
+                <td>number</td>
+                <td>Palette.</td>
+              </tr>
+            </tbody>
+          </table>
+          <br>
+          
+          <h2>Export Caveats</h2>
+          <hr>
+          <ul>
+            <li>Component coordinates are encoded as whole numbers between 0 and 511. Because scaled output can result in floating point numbers, these coordinates will be rounded to the nearest whole number. To avoid image distortion, align your points with coordinates that will not result in floating point numbers.</li>
+          </ul>
+          <br>
+
+          <h2>Miscellaneous</h2>
+          <hr>
+          <ul>
+            <li>Everything that moves does so in 2 pixel increments to avoid floating point numbers.</li>
+            <li>All blobby images are stored in your web browsers `<i>localStorage</i>`.</li>
+            <li>Currently there is no <i>UNDO</i> functionality.</li>
+            <li>Seems to work in Chrome and FireFox, </li>
+          </ul>
+          <br>
+          
+          Blobby image editor is a tool created for JS13K 2024 by Cliff Earl, Antix Development.
+          <br>
+          <br>
+
+          <h2>Thanks</h2>
+          
+          If you end up using Blobby Image Editor maybe you'd consider <a href="https://www.buymeacoffee.com/antixdevelu" target="_blank">buying me a coffee</a>
+          <br>
+          <br>
+
+          <button id="closeHelpButton" onclick="showHelp(false);">OKAY</button>
+        </div>
       </div>
-
     </div>
     
   </body>

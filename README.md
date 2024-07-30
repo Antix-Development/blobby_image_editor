@@ -1,18 +1,31 @@
 
 <h1>Blobby Image Editor</h1><br>
 
-A basic tool for creating and editing 2d blobby images.
+A basic tool for creating and editing 2d blobby images which can be used as assets in web apps and games.
 
-### What's New?
+<h2>Whats New?</h2>
 
-v0.9.0 (28 Jul 2024)
+v1.0.0-rc.1 (30 Jul 2024)
+
+- Component points now encoded to ASCII string to reduce exported code size. Thanks to [xem](https://github.com/xem) for suggesting it.
+
+- Image dimensions also encoded into an ASCII string.
+
+- Viewer now generates SVG image. Thanks again to [xem](https://github.com/xem) for suggesting it.
+
+- Viewer code grew in size but offset by size savings in exported code.
+
+- Help dialog improved layout and also now mirrors readme.md.
+
+- Major overhaul of the syntax highlighting so it can handle literal template strings.
+
+<h2>History</h2>
+
+<details><summary>v0.9.0 (28 Jul 2024)</summary><p>
 
 - Initial public release
 
-<!-- <details><summary>v?.?.? (dd mmm yyyy)</summary><p>
-- detail.
-- detail.
-</p></details> -->
+</p></details>
 
 <h2>Getting Started</h2>
 
@@ -30,7 +43,7 @@ v0.9.0 (28 Jul 2024)
   <li><b><i>Left</i></b> click a point in the editor pane to select it.<br></li>
   <li><b><i>Right</i></b> click a component in the editor pane to select it.<br></li>
   <li>Press the <b><i>Tilde</i></b> key to select the next point in the selected component.</li>
-  <li>Hold the <b><i>Shift</i></b> key and press the <b><i>Tilde</i></b> key to select the previous point in the selected compnent.</li>
+  <li>Hold the <b><i>Shift</i></b> key and press the <b><i>Tilde</i></b> key to select the previous point in the selected component.</li>
 <li>Hold the <b><i>Alt</i></b> key and press the <b><i>Tilde</i></b> key to cycle through the components in the selected blobby image.</li>
     <li>Hold the <b><i>Ctrl</i></b> key and press the <b><i>Tilde</i></b> key to cycle through the blobby images.</li>
 </ul>
@@ -116,19 +129,14 @@ The exported data will be in the form of an array named <b><i>blobbyImages</i></
       <td>Description</td>
     </tr>
     <tr>
-      <td>0 to length - 3</td>
+      <td>0</td>
       <td>array</td>
       <td><b><i>Components</i></b>, sorted into ascending z-index order.</td>
     </tr>
     <tr>
-      <td>length - 2</td>
-      <td>number</td>
-      <td>Image width.</td>
-    </tr>
-    <tr>
       <td>length - 1</td>
-      <td>number</td>
-      <td>Image height.</td>
+      <td>encoded array</td>
+      <td>Image width and height.</td>
     </tr>
   </tbody>
 </table>
@@ -142,24 +150,9 @@ The exported data will be in the form of an array named <b><i>blobbyImages</i></
       <td>Description</td>
     </tr>
     <tr>
-      <td>0 to length - 6 </td>
-      <td>number</td>
+      <td>0</td>
+      <td>encoded array</td>
       <td><b><i>Points</i></b>, sorted into clockwise order.</td>
-    </tr>
-    <tr>
-      <td>length - 5</td>
-      <td>number</td>
-      <td>Gradient x.</td>
-    </tr>
-    <tr>
-      <td>length - 4</td>
-      <td>number</td>
-      <td>gradient y.</td>
-    </tr>
-    <tr>
-      <td>length - 3</td>
-      <td>number</td>
-      <td>Gradient radius.</td>
     </tr>
     <tr>
       <td>length - 2</td>
@@ -175,6 +168,11 @@ The exported data will be in the form of an array named <b><i>blobbyImages</i></
 </table>
 <br>
 
+<h2>Export Caveats</h2>
+<ul>
+  <li>Component coordinates are encoded as whole numbers between 0 and 511. Because scaled output can result in floating point numbers, these coordinates will be rounded to the nearest whole number. To avoid image distortion, align your points with coordinates that will not result in floating point numbers.</li>
+</ul>
+
 <h2>Miscellaneous</h2>
 
 <ul>
@@ -187,6 +185,6 @@ The exported data will be in the form of an array named <b><i>blobbyImages</i></
 
 Blobby image editor is a tool created for JS13K 2024 by Cliff Earl, Antix Development.
 
-## Thanks
+<h2>Thanks</h2>
 
 If you end up using Blobby Image Editor maybe you'd consider [buying me a coffee](https://www.buymeacoffee.com/antixdevelu) :coffee:

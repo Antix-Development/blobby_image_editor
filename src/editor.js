@@ -1841,8 +1841,6 @@ recreateImportedImage = importedImage => {
 
     checkImportedImageName(importedImage);
 
-    log(importedImage.name);
-
     // Recreate the imported image.
     const newImage = addImage(importedImage.name);
     newImage.x = importedImage.x;
@@ -1932,8 +1930,19 @@ setCodeCompacting = state => {
 // Get a newline string if exported code compacting is disabled.
 newLine = e => ((dataFile.compactCode) ? ' ' : '\n'),
 
+charset = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/',
+
+encodeCoordinates = coords => (coords.map(coord => {
+      const 
+      high = floor(coord / 64),
+      low = coord % 64;
+      return charset[high] + charset[low];
+  }).join('')),
+
 // Get the bounding box that accomodates the given images blobbiness.
 calculateImageBoundingBox = image => {
+
+  // let path;
 
   const components = image.components;
 
@@ -1965,6 +1974,8 @@ calculateImageBoundingBox = image => {
 
         tempContext.beginPath();
         tempContext.moveTo(points[2],  points[3]);
+
+        // path = 'M' + [ points[2],  points[3]]; // Begin path.
   
         for (let i = 2; i < last - 4; i += 2) {
           let 
@@ -1975,6 +1986,12 @@ calculateImageBoundingBox = image => {
           y2 = points[i + 3];
 
           tempContext.bezierCurveTo(x1 + ((x2 - (i ? points[i - 2] : points[0])) / 6) * blobbiness, y1 + ((y2 - (i ? points[i - 1] : points[1])) / 6) * blobbiness, x2 - (((i !== last ? points[i + 4] : x2) - x1) / 6) * blobbiness, y2 - (((i !== last ? points[i + 5] : y2) - y1) / 6) * blobbiness, x2, y2);
+
+          // path += 'C' + [floor(x1 + ((x2 - (i ? points[i - 2] : points[0])) / 6) * blobbiness), 
+          // floor(y1 + ((y2 - (i ? points[i - 1] : points[1])) / 6) * blobbiness), 
+          // floor(x2 - (((i !== last ? points[i + 4] : x2) - x1) / 6) * blobbiness), 
+          // floor(y2 - (((i !== last ? points[i + 5] : y2) - y1) / 6) * blobbiness), 
+          // floor(x2), floor(y2)]; // Extend path.
         }
         tempContext.stroke();
 
@@ -2026,7 +2043,6 @@ calculateImageBoundingBox = image => {
     image.w = 0;
     image.h = 0;
   }
-
 },
 
 // Generate exported code and copy it to the system clipbpoard.
@@ -2067,24 +2083,27 @@ exportImages = e => {
 
           let points = component.points.sort((a, b) => a.a - b.a).map(({x, y}) => [(x * previewScale) - dX, (y * previewScale) - dY]).flat();
 
+          let encodedPoints = encodeCoordinates(points);
+          
+          log(points);
+
           str = '';
 
-          for (let j = 0; j < points.length; j++) str += `${points[j]}, `
+          // for (let j = 0; j < points.length; j++) str += `${points[j]}, `
+          // output += `${indentCode(3)}${str.substring(0, str.length - 1)}`;
 
-          // output +='XXX';
-
-          output += `${indentCode(3)}${str.substring(0, str.length - 1)}`;
+          output += `${indentCode(3)}'${encodedPoints}',`;
 
           output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Points.${newLine()}` : newLine();
           
-          output += `${indentCode(3)}${component.x0 - dX},`;
-          output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Gradient x.${newLine()}` : newLine();
+          // output += `${indentCode(3)}${component.x0 - dX},`;
+          // output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Gradient x.${newLine()}` : newLine();
 
-          output += `${indentCode(3)}${component.y0 - dY},`;
-          output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Gradient y.${newLine()}` : newLine();
+          // output += `${indentCode(3)}${component.y0 - dY},`;
+          // output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Gradient y.${newLine()}` : newLine();
 
-          output += `${indentCode(3)}${component.r1},`;
-          output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Gradient radius.${newLine()}` : newLine();
+          // output += `${indentCode(3)}${component.r1},`;
+          // output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Gradient radius.${newLine()}` : newLine();
 
           output += `${indentCode(3)}${component.blobbiness},`;
           output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Blobbiness.${newLine()}` : newLine();
@@ -2096,10 +2115,13 @@ exportImages = e => {
         }
       }
 
-      output += `${indentCode(2)}${image.w},`;
-      output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Width.${newLine()}` : newLine();
-      output += `${indentCode(2)}${image.h}`;
-      output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Height.${newLine()}` : newLine();
+      output += `${indentCode(2)}'${encodeCoordinates([image.w, image.h])}',`;
+      output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Dimensions.${newLine()}` : newLine();
+
+      // output += `${indentCode(2)}${image.w},`;
+      // output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Width.${newLine()}` : newLine();
+      // output += `${indentCode(2)}${image.h}`;
+      // output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Height.${newLine()}` : newLine();
 
       output += `${indentCode(1)}],${newLine()}`;
 
@@ -2145,105 +2167,189 @@ exportImages = e => {
   outputCode.innerHTML = output;
 
   writeClipboardText(outputCode);
-},
+};
 
 // #endregion
 
 // #region Syntax Highlighting
 
+// A generator function to generate unique alpha strings.
+function* uniqueIdentifierGenerator() {
+  let 
+  alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  length = 1,
+  current = 0;
+
+  while (true) {
+    let 
+    identifier = [],
+    temp = current;
+
+    for (let i = 0; i < length; i++) {
+      identifier.unshift(alphabet[temp % alphabet.length]);
+      temp = Math.floor(temp / alphabet.length);
+    }
+
+    yield identifier.join('');
+
+    current++;
+    if (current === Math.pow(alphabet.length, length)) {
+      current = 0;
+      length++;
+    }
+  }
+}
+
+const 
+uidGenerator = uniqueIdentifierGenerator(),
+
+getUID = e => (uidGenerator.next().value),
+
 // Highlight the given syntax. NOTE: This is possibly the worlds worst syntax highlighter :D
 highlightSyntax = str => {
 
-      // Recolor strings (must be executed first).
-      const stringRegex = /(".*?"|'.*?')/g;
-      str = str.replace(stringRegex, '<span class="string">$1</span>');
+  let 
+  literalStringRegex = /(`[^`]*`)|(['"])(?:(?!\2)[^`\\]|\\.)*?\2/g,
+  normalStrings = [],
+  templateLiterals = [],
+  literalStringMap = {},
+  match;
+  // Separate normalstrings and literal template strings.
+  while ((match = literalStringRegex.exec(str)) !== null) {
+    if (match[1]) {
+      templateLiterals.push(match[1]);
+    } else if (match[2]) {
+      normalStrings.push(match[0]);
+    }
+  }
 
+  // Recolor normal strings.
+  for (let i = 0; i < normalStrings.length; i++) {
+    const string = normalStrings[i];
+    str = str.replace(string, `<span class="string">${string}</span>`);
+  }
 
-      const 
-      functionRegEx = /(\bfunction\s+(\w+)\b|\b(\w+)\s*=\s*(\(\s*[\w\s,]*\s*\)\s*|[\w\s,]*\s*)=>)/g,
-      matches = str.matchAll(functionRegEx),
-      functionNames = [];
+  // Split given literal template into it's constituent parts for recoloring.
+  const 
+  splitTemplateLiteral = literal => {
+    literal = literal.slice(1, -1);
+    const parts = literal.split(/(\$\{[^}]*\})/);
+    parts[0] = `\`${parts[0]}`; // Insert backtick at beginning of first string.
+    parts[parts.length - 1] = `${parts[parts.length - 1]}\``; // add backtick at end of last string.
+    return parts.filter(part => part !== '');
+  },
 
-      for (const match of matches) {
+  // Add correct span tags to strings.
+  addSpans = part => {
+    if (part.startsWith('${')) {
+      return `<span class="literal">\${</span><span class="keyword">${part.slice(2, -1)}</span><span class="literal">}</span>`;
+    } else {
+      return `<span class="string">${part}</span>`;
+    }
+  },
 
-        if (match[2]) {
-          functionNames.push(match[2]); // For regular functions
-        } else if (match[3]) {
-          functionNames.push(match[3]); // For arrow functions
-        }
-      }
+  // Split and add span tags to literal templates.
+  processedTemplateLiterals = templateLiterals.map(literal => 
+    splitTemplateLiteral(literal).map(addSpans)
+  );
 
-      functionNames.forEach(functionName => {
-        str = str.replace(new RegExp(functionName, 'gi'), `<span class="func">${functionName}</span>`);
-      });
+  // Add literals to an associative array and 
+  for (let i = 0; i < processedTemplateLiterals.length; i++) {
+    let 
+    literal = processedTemplateLiterals[i],
+    id = '$literal$' + getUID();
 
-      // Recolor comments.
-      const commentRegex = /(\/\/.*?$|\/\*[\s\S]*?\*\/)/gm;
-      str = str.replace(commentRegex, '<span class="comment">$1</span>')
+    str = str.replace(templateLiterals[i], id); // replace in main string with id for later reinsertion.
+    literalStringMap[id] = literal.join('');
+  }
 
-      // Recolor brackets.
-      const bracketRegex = /[\[\]]/g;
-      str = str.replace(bracketRegex, (match) => `<span class="bracket">${match}</span>`);
+  const 
+  functionRegEx = /(\bfunction\s+(\w+)\b|\b(\w+)\s*=\s*(\(\s*[\w\s,]*\s*\)\s*|[\w\s,]*\s*)=>)/g,
+  matches = str.matchAll(functionRegEx),
+  functionNames = [];
 
-      // Recolor parenthesis.
-      const parenthesisRegex = /[()]/g;
-      str = str.replace(parenthesisRegex, (match) => `<span class="parenthesis">${match}</span>`);
+  for (const match of matches) {
 
-      // Recolor curly braces.
-      const curlyBraceRegex = /[{}]/g;
-      str = str.replace(curlyBraceRegex, (match) => `<span class="curly-brace">${match}</span>`);
+    if (match[2]) {
+      functionNames.push(match[2]); // For regular functions
+    } else if (match[3]) {
+      functionNames.push(match[3]); // For arrow functions
+    }
+  }
 
-      // Recolor numbers.
-      // const numberRegex = /\b\d+\b/g;
-      const numberRegex = /(?<!['"])(\b\d+\b)(?!['"])/g;
-      str = str.replace(numberRegex, (match) => `<span class="number">${match}</span>`);
+  functionNames.forEach(functionName => {
+    str = str.replace(new RegExp(functionName, 'gi'), `<span class="func">${functionName}</span>`);
+  });
 
-      // Recolor keywords.
-      const keywords = [
-        'function', 
-        'const',
-        'let',
-      ];
-      const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'g');
-      str = str.replace(keywordRegex, '<span class="keyword">$1</span>');
+  // Recolor comments.
+  const commentRegex = /(\/\/.*?$|\/\*[\s\S]*?\*\/)/gm;
+  str = str.replace(commentRegex, '<span class="comment">$1</span>')
 
-      // Recolor function names.
-      const functionNames2 = [
-        'createElement',
-        'getContext',
-        'addGradientColorStop',
-        'beginPath',
-        'moveTo',
-        'bezierCurveTo',
-        'stroke',
-        'createRadialGradient',
-        'fill',
-      ];
+  // Recolor brackets.
+  const bracketRegex = /[\[\]]/g;
+  str = str.replace(bracketRegex, (match) => `<span class="bracket">${match}</span>`);
 
-      const functionNamesRegex = new RegExp(`\\b(${functionNames2.join('|')})\\b`, 'g');
-      str = str.replace(functionNamesRegex, '<span class="func">$1</span>');
+  // Recolor parenthesis.
+  const parenthesisRegex = /[()]/g;
+  str = str.replace(parenthesisRegex, (match) => `<span class="parenthesis">${match}</span>`);
 
-      // Recolor lengths.
-      const lengthRegex = /\b(\w+)(\.length)\b/g;
-      str = str.replace(lengthRegex, '$1<span class="length">$2</span>');
+  // Recolor curly braces.
+  const curlyBraceRegex = /[{}]/g;
+  str = str.replace(curlyBraceRegex, (match) => `<span class="curly-brace">${match}</span>`);
 
-      // Recolor semicolons.
-      const semicolonRegEx = /;/g;
-      str = str.replace(semicolonRegEx, '<span class="semicolon">$&</span>');
+  // Recolor numbers.
+  // const numberRegex = /\b\d+\b/g;
+  const numberRegex = /(?<!['"])(\b\d+\b)(?!['"])/g;
+  str = str.replace(numberRegex, (match) => `<span class="number">${match}</span>`);
 
-      // Recolor semicolons.
-      const commaRegEx = /,/g;
-      str = str.replace(commaRegEx, '<span class="semicolon">$&</span>');
+  // Recolor keywords.
+  const keywords = [
+    'function', 
+    'const',
+    'let',
+  ];
 
-      // Recolor arrow functions.
-      const arrowFunctionRegex = /=>/g;
-      str = str.replace(arrowFunctionRegex, '<span class="arrow-function">$&</span>');
+  const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'g');
+  str = str.replace(keywordRegex, '<span class="keyword">$1</span>');
 
-      // Replace newlines with line breaks.
-      str = str.replace(/\r?\n/g, '<br>');
+  // Recolor lengths.
+  const lengthRegex = /\b(\w+)(\.length)\b/g;
+  str = str.replace(lengthRegex, '$1<span class="length">$2</span>');
 
-      return str;
+  // Recolor semicolons.
+  const semicolonRegEx = /;/g;
+  str = str.replace(semicolonRegEx, '<span class="semicolon">$&</span>');
+
+  // Recolor semicolons.
+  const commaRegEx = /,/g;
+  str = str.replace(commaRegEx, '<span class="semicolon">$&</span>');
+
+  // Recolor arrow functions.
+  const arrowFunctionRegex = /=>/g;
+  str = str.replace(arrowFunctionRegex, '<span class="arrow-function">$&</span>');
+
+  // Reinsert the formatted literal templates in their correct positions.
+  const entries = Object.entries(literalStringMap);
+  entries.forEach(([key, value]) => {
+      str = str.replace(key, value);//`\`${value}\``);
+      // console.log(`${key}: ${value}`);
+  });
+
+  // Recolor function names. Do this after reintegrating the literal strings because they might contain one of these functions.
+  const functionNames2 = [
+    'btoa',
+  ];
+
+  const functionNamesRegex = new RegExp(`\\b(${functionNames2.join('|')})\\b`, 'g');
+  str = str.replace(functionNamesRegex, '<span class="func">$1</span>');
+
+  // Replace newlines with line breaks.
+  str = str.replace(/\r?\n/g, '<br>');
+
+  return str;
 };
+
+
 // #endregion
 
 // #region Window Event Handlers
@@ -2382,8 +2488,9 @@ onkeydown = e => {
 
 };
 
-// If the colorPicker or downloadSelect dialogs are open and the mouse is clicked outside of their bounding box, close it.
-onpointerdown = e => {
+// If any dialog is open, close it if the user clicks outside of it's bounding box.
+onpointerup = e => {
+
   if (colorPickerOpen) {
     const bounds = colorPickerDialog.getBoundingClientRect();
     if (e.pageX < bounds.left || e.pageX > bounds.right || e.pageY < bounds.top || e.pageY > bounds.bottom ) {
@@ -2399,8 +2506,18 @@ onpointerdown = e => {
       downloadSelectVisible = false;
       e.preventDefault();
     }
+
+  } else if (helpVisible) {
+    if (e.button != 0) return;
+    const 
+    x = e.pageX,
+    y = e.pageY,
+    bounds = helpBody.getBoundingClientRect();
+    if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) showHelp(false);
+      e.preventDefault();
   }
-},
+
+};
 
 // #endregion
 
@@ -2467,16 +2584,6 @@ onload = e => {
 
   enablePaletteSwatches(false);
 
-  // Event handler so that when the user clicks outside the actual help body, the help screen closes.
-  help.onpointerup = e => {
-    if (e.button != 0) return;
-    const 
-    x = e.pageX,
-    y = e.pageY,
-    bounds = helpBody.getBoundingClientRect();
-    if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) showHelp(false);
-  };
-
   // Set event handler to inform the user that some data may be unsaved.
   window.onbeforeunload = e => {
     if (unsavedChanges) {
@@ -2485,52 +2592,65 @@ onload = e => {
     }
   };
 
-  // Highlight and set the blobby renderer code.
-  blobbyRenderCode.innerHTML = highlightSyntax(`
+  const codeSnippet = `
+let 
+gradientID = 0, // every gradient must be unique.
 
 // Render the blobby image at the given index.
-let renderBlobbyImage = index => {
+renderBlobbyImage = index => {
 
   let 
-  gradient,
-  addGradientColorStop = (position, color) => gradient.addColorStop(position, '#' + color),
-
+  // Get the size (length) of the given array.
   sizeOf = array => (array.length),
 
-  imageToRender = blobbyImages[index],
+  // Decode the given encoded ASCII into an array numbers.
+  decodeCoordinates = encoded => {
+    let 
+    charset = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW&lt&gtZ+/',
+    coords = [];
+    for (let i = 0; i < sizeOf(encoded); i += 2) coords.push(charset.indexOf(encoded[i]) * 64 + charset.indexOf(encoded[i + 1]));
+    return coords;
+  },
 
-  imageToRenderSize = sizeOf(imageToRender),
+  image = blobbyImages[index],
+
+  imageToRenderSize = sizeOf(image),
+
   blobbyImagesSize = sizeOf(blobbyImages),
 
   palettes = blobbyImages[blobbyImagesSize - 1],
 
-  canvas = document.createElement('canvas'),
-  context = canvas.getContext('2d');
+  [imageWidth, imageHeight] = decodeCoordinates(image[imageToRenderSize - 1]),
 
-  context.lineWidth = blobbyImages[blobbyImagesSize - 2];
-  context.strokeStyle = '#222';
+  svgString = \`&ltsvg viewBox="0 0 \${imageWidth} \${imageHeight}" width="\${imageWidth}" height="\${imageHeight}" xmlns="http://www.w3.org/2000/svg"&gt&ltdefs&gt\`,
 
-  canvas.width = imageToRender[imageToRenderSize - 2];
-  canvas.height = imageToRender[imageToRenderSize - 1];
+  xxxString = 'what the fuck',
+
+  pathsString = '',
+
+  svgColorStop = (offset, color) => svgString += \`&ltstop offset="\${offset}" stop-color="#\${color}"/&gt\`,
+
+  img = new Image();
 
   // Render components loop.
-  for (let j = 0; j < imageToRenderSize - 2; j++) {
+  for (let j = 0; j < imageToRenderSize - 1; j++) {
     let 
-    points = imageToRender[j], // Points in next component.
+    component = image[j],
+
+    blobbiness = component[1],
+    paletteIndex = component[2] * 3, // 3 color strings per palette.
+
+    points = decodeCoordinates(component[0]);
+
+    // Some points need to be duplicated.
+    for (let k = 0; k < 6; k++) points.push(points[k]);
+
+    let 
     pointsSize = sizeOf(points),
-    paletteIndex = points[pointsSize - 1] * 3,
-    blobbiness = points[pointsSize - 2],
-    gradientRadius = points[pointsSize - 3],
-    gradientY = points[pointsSize - 4],
-    gradientX = points[pointsSize - 5];
 
-    // Some points need to be duplicated for plotting bezier curves.
-    for (let k = 5; k >= 0; k--) points.splice(pointsSize - 5, 0, points[k]);
+    path = 'M' + [points[2],  points[3]]; // Begin path.
 
-    context.beginPath();
-    context.moveTo(points[2],  points[3]);
-
-    for (let i = 2; i < pointsSize - 4; i += 2) {
+    for (let i = 2; i < pointsSize; i += 2) {
       let 
       x1 = points[i],
       y1 = points[i + 1],
@@ -2538,33 +2658,41 @@ let renderBlobbyImage = index => {
       x2 = points[i + 2],
       y2 = points[i + 3];
 
-      context.bezierCurveTo(x1 + ((x2 - (i ? points[i - 2] : points[0])) / 6) * blobbiness, 
-                            y1 + ((y2 - (i ? points[i - 1] : points[1])) / 6) * blobbiness, 
-                            x2 - (((i !== pointsSize ? points[i + 4] : x2) - x1) / 6) * blobbiness, 
-                            y2 - (((i !== pointsSize ? points[i + 5] : y2) - y1) / 6) * blobbiness, 
-                            x2, y2);
+      path += 'C' + [x1 + ((x2 - (i ? points[i - 2] : points[0])) / 6) * blobbiness, 
+        y1 + ((y2 - (i ? points[i - 1] : points[1])) / 6) * blobbiness, 
+        x2 - (((i !== pointsSize ? points[i + 4] : x2) - x1) / 6) * blobbiness, 
+        y2 - (((i !== pointsSize ? points[i + 5] : y2) - y1) / 6) * blobbiness, 
+        x2, y2]; // Extend path.
     }
-    context.stroke();
 
-    gradient = context.createRadialGradient(gradientX, gradientY, 1, gradientX, gradientY, gradientRadius);
+    // Append component gradient.
+    svgString += \`&ltradialGradient id="g\${gradientID}" r="90%" cx="30%" cy="30%"&gt\`;
+    svgColorStop(0, palettes[paletteIndex ++]);
+    svgColorStop(.2, palettes[paletteIndex ++]);
+    svgColorStop(.6, palettes[paletteIndex ++]);
+    svgString += \`&lt/radialGradient>\`;
 
-    addGradientColorStop(0, palettes[paletteIndex ++]);
-    addGradientColorStop(.2, palettes[paletteIndex ++]); // + 1.
-    addGradientColorStop(.6, palettes[paletteIndex ++]); // + 2.
-
-    context.fillStyle = gradient;
-
-    context.fill();
+    // Append component path.
+    pathsString += \`&ltpath d="\${path}" stroke="#000" stroke-width="\${blobbyImages[blobbyImagesSize - 2]}" fill="url(#g\${gradientID++})"/&gt\`;
   }
 
-  // 
-  // TODO: Do more stuff with the newly rendered image.
-  // 
+  // Execute this code when the image has fully loaded.
+  img.onload = () => {
+    // Do whatever with the image now.
+    imageContainer.appendChild(img); // Example displays it in an HTML div.
+  }
 
-  return canvas;
+  img.src = \`data:image/svg+xml;base64,\${btoa(svgString + '&lt/defs&gt' + pathsString + '&lt/svg&gt')}\`; // Mime encode SVG and set it to the images source (start it loading).
 };
 
-`);
+// Execute this code when the page has fully loaded.
+onload = e => {
+  for (let i = 0; i < blobbyImages.length - 2; i++) renderBlobbyImage(i);
+};
+`;
+
+  // Highlight and set the blobby renderer code.
+  blobbyRenderCode.innerHTML = highlightSyntax(codeSnippet.replace(/\\`/g, '`'));
 
   // Render preview pane background imagery.
   const 
