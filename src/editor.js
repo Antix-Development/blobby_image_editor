@@ -2066,7 +2066,6 @@ exportImages = e => {
     dX = image.x,
     dY = image.y;
 
-
     if (image.components.length > 0) { // Skip images with no components.
 
       output += `${indentCode(1)}[`;
@@ -2081,29 +2080,13 @@ exportImages = e => {
           output += `${indentCode(2)}[`;
           output += (dataFile.generateComments && !dataFile.compactCode) ? ` // ${component.name}.${newLine()}` : newLine();
 
-          let points = component.points.sort((a, b) => a.a - b.a).map(({x, y}) => [(x * previewScale) - dX, (y * previewScale) - dY]).flat();
-
-          let encodedPoints = encodeCoordinates(points);
+          let encodedPoints = encodeCoordinates(component.points.sort((a, b) => a.a - b.a).map(({x, y}) => [(x * previewScale) - dX, (y * previewScale) - dY]).flat());
           
-          log(points);
-
           str = '';
-
-          // for (let j = 0; j < points.length; j++) str += `${points[j]}, `
-          // output += `${indentCode(3)}${str.substring(0, str.length - 1)}`;
 
           output += `${indentCode(3)}'${encodedPoints}',`;
 
           output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Points.${newLine()}` : newLine();
-          
-          // output += `${indentCode(3)}${component.x0 - dX},`;
-          // output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Gradient x.${newLine()}` : newLine();
-
-          // output += `${indentCode(3)}${component.y0 - dY},`;
-          // output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Gradient y.${newLine()}` : newLine();
-
-          // output += `${indentCode(3)}${component.r1},`;
-          // output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Gradient radius.${newLine()}` : newLine();
 
           output += `${indentCode(3)}${component.blobbiness},`;
           output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Blobbiness.${newLine()}` : newLine();
@@ -2118,13 +2101,7 @@ exportImages = e => {
       output += `${indentCode(2)}'${encodeCoordinates([image.w, image.h])}',`;
       output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Dimensions.${newLine()}` : newLine();
 
-      // output += `${indentCode(2)}${image.w},`;
-      // output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Width.${newLine()}` : newLine();
-      // output += `${indentCode(2)}${image.h}`;
-      // output += (dataFile.generateComments && !dataFile.compactCode) ? ` // Height.${newLine()}` : newLine();
-
       output += `${indentCode(1)}],${newLine()}`;
-
     }
   }
 
@@ -2213,20 +2190,25 @@ highlightSyntax = str => {
   normalStrings = [],
   templateLiterals = [],
   literalStringMap = {},
+  stringAlreadyReplaced = {},
   match;
+
   // Separate normalstrings and literal template strings.
   while ((match = literalStringRegex.exec(str)) !== null) {
     if (match[1]) {
       templateLiterals.push(match[1]);
     } else if (match[2]) {
-      normalStrings.push(match[0]);
+      normalStrings.push(match[0]); // Don't cache duplicates.
     }
   }
 
   // Recolor normal strings.
   for (let i = 0; i < normalStrings.length; i++) {
     const string = normalStrings[i];
-    str = str.replace(string, `<span class="string">${string}</span>`);
+    if (!stringAlreadyReplaced[string]) {
+      stringAlreadyReplaced[string] = true;
+      str = str.replaceAll(string, `<span class="string">${string}</span>`);
+    }
   }
 
   // Split given literal template into it's constituent parts for recoloring.
